@@ -1,0 +1,51 @@
+base_lr: 0.1
+batch_size: 32
+config: config/st_gcn/nturgbd-cross-view/train.yaml
+device:
+- 0
+eval_interval: 5
+feeder: st_gcn.feeder.Feeder
+ignore_weights: []
+log_interval: 100
+model: st_gcn.net.ST_GCN
+model_args:
+  channel: 2
+  graph: st_gcn.graph.NTU_RGB_D
+  graph_args:
+    labeling_mode: spatial
+  mask_learning: true
+  num_class: 5
+  num_person: 1
+  num_point: 25
+  use_data_bn: true
+  window_size: 150
+nesterov: true
+num_epoch: 160
+num_worker: 128
+optimizer: SGD
+phase: train
+print_log: true
+save_interval: 10
+save_score: false
+seed: 1
+show_topk:
+- 1
+- 5
+start_epoch: 0
+step:
+- 20
+- 50
+test_batch_size: 16
+test_feeder_args:
+  data_path: /home/justin/Documents/new-research/keypoint-new/new_format/gt/xview/train_data.npy
+  label_path: /home/justin/Documents/new-research/keypoint-new/new_format/gt/xview/train_label.npy
+  mode: test
+  window_size: 150
+train_feeder_args:
+  data_path: /home/justin/Documents/new-research/keypoint-new/new_format/gt/xview/train_data.npy
+  label_path: /home/justin/Documents/new-research/keypoint-new/new_format/gt/xview/train_label.npy
+  mode: train
+  window_size: 150
+weight_decay: 0.0001
+weights: null
+work_dir: /home/justin/Documents/new-research/keypoint-new/st-gcn-data-len-master/work_dir/NTU-RGB-D/xview/ST_GCN

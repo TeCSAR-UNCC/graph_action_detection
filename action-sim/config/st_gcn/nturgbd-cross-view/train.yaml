@@ -1,0 +1,56 @@
+work_dir: /home/justin/Documents/new-research/keypoint-new/st-gcn-data-len-master/work_dir/NTU-RGB-D/xview/ST_GCN
+
+#old
+#/home/justin/Documents/new-research/keypoint-new/gt/data.npy
+#/home/justin/Documents/new-research/keypoint-new/gt/lables.npy
+
+#new
+#/home/justin/Documents/new-research/keypoint-new/new_format/gt/xview/train_data.npy
+#/home/justin/Documents/new-research/keypoint-new/new_format/gt/xview/train_label.npy
+#/home/justin/Documents/new-research/keypoint-new/new_format/gt/xview/val_data.npy
+#/home/justin/Documents/new-research/keypoint-new/new_format/gt/xview/val_label.npy
+
+
+#43->45.00%
+
+# feeder
+feeder: st_gcn.feeder.Feeder
+train_feeder_args:
+  mode: train
+  window_size: 150
+  data_path: /home/justin/Documents/new-research/keypoint-new/new_format/gt/xview/train_data.npy
+  label_path: /home/justin/Documents/new-research/keypoint-new/new_format/gt/xview/train_label.npy
+test_feeder_args:
+  mode: test
+  window_size: 150
+  data_path: /home/justin/Documents/new-research/keypoint-new/new_format/gt/xview/train_data.npy
+  label_path: /home/justin/Documents/new-research/keypoint-new/new_format/gt/xview/train_label.npy
+
+# model
+model: st_gcn.net.ST_GCN
+model_args:
+  num_class: 5
+  channel: 2
+  window_size: 150
+  num_point: 25
+  num_person: 1
+  graph: st_gcn.graph.NTU_RGB_D
+  graph_args:
+    labeling_mode: 'spatial'
+  mask_learning: True
+  use_data_bn: True 
+
+#optim
+weight_decay: 0.0001
+base_lr: 0.1
+step: [20, 50]
+
+# training
+device: [0]
+batch_size: 32
+test_batch_size: 16
+num_epoch: 160
+nesterov: True
+
+
+

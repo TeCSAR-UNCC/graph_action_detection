@@ -1,0 +1,64 @@
+base_lr: 0.01
+batch_size: 256
+cameras:
+- 1
+config: config/st_gcn/nturgbd-cross-view/test.yaml
+device: 0
+draw_bboxes: true
+draw_poses: true
+enable_edge_server: 1
+eval_interval: 5
+eval_set: 2
+feeder: st_gcn.feeder.Feeder
+framerate: 60
+ground_truth: null
+ignore_weights: []
+image_output_path: /home/justin/Documents/new-research/keypoint-new/output
+image_path: /home/justin/Documents/new-research/keypoint-new/demos
+json_path: null
+log_interval: 100
+model: st_gcn.net.ST_GCN
+model_args:
+  channel: 2
+  graph: st_gcn.graph.NTU_RGB_D
+  graph_args:
+    labeling_mode: spatial
+  mask_learning: true
+  num_class: 5
+  num_person: 1
+  num_point: 25
+  use_data_bn: true
+  window_size: 150
+nesterov: false
+num_epoch: 80
+num_worker: 128
+openpose_path: null
+optimizer: SGD
+phase: test
+print_log: true
+save_interval: 10
+save_score: false
+seed: 1
+sequence:
+- 13
+- 2000
+show_topk:
+- 1
+- 5
+source_framerate: 60
+start_epoch: 0
+step:
+- 20
+- 40
+- 60
+test_batch_size: 1
+test_feeder_args:
+  data_path: /home/justin/Documents/new-research/keypoint-new/new_format/gt/xview/train_data.npy
+  label_path: /home/justin/Documents/new-research/keypoint-new/new_format/gt/xview/train_label.npy
+  mode: test
+  window_size: 150
+train_feeder_args: {}
+use_gpu: -1
+weight_decay: 0.0005
+weights: /home/justin/Documents/new-research/keypoint-new/st-gcn-data-len-master/work_dir/NTU-RGB-D/xview/ST_GCN/epoch80_model.pt
+work_dir: ./work_dir/temp
