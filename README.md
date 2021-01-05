@@ -1,7 +1,7 @@
 # graph_action_detection
 graph based action detection and mobility assessment.
 
-readme is in progress same with code clean up
+readme creation is in progress.
 
 To extract video frames:
 ```
