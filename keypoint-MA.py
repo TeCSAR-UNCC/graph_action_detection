@@ -8,6 +8,7 @@ import numpy as np
 import sys
 import csv
 
+#just the kalman filter
 class kalmanFilter:
         #create the filter
 	def __init__(self):
@@ -34,21 +35,19 @@ def leadZero(x):
 	y=y+str(x)
 	return y
 
-'''
-s1=1
-s2=10
-s3=100
-s4=1000
-print(leadZero(s1))
-print(leadZero(s2))
-print(leadZero(s3))
-print(leadZero(s4))
-exit()
-'''
+
 endString='.jpg'
+
+
+#this file is the save file for the regressed hip angles:
 HIPansfile="/home/justin/Documents/mobility/other/hip-ans-new.csv"
+
+##this file is the save file for the regressed knee angles::
 Kneeansfile="/home/justin/Documents/mobility/other/knee-ans-new.csv"
+
+#this file is for recording which images give issues with reading keypoints:
 failfile="/home/justin/Documents/mobility/other/MA-issues.csv"
+
 LastHipInfrence=0
 HIPanswer=0
 Knee_Answer=0
@@ -60,12 +59,12 @@ kfilter = kalmanFilter()
 kneefilter = kalmanFilter()
 
 for i in range(175):
+    #input src of video
 	sourceFile='/home/justin/Documents/mobility/camera3/'
-	saveFile='/home/justin/Documents/mobility/newpose/'
 	fail=0
 	fileNum=leadZero(i+1)
 	sourceFile=sourceFile+fileNum+endString
-	saveFile=saveFile+fileNum+endString
+
 	print(sourceFile)
 	
 	r = requests.post(
@@ -106,7 +105,7 @@ for i in range(175):
 	#exit()
 	
 
-	
+	#keypoint parser and angle infrence:
 	if (rightside_point[0][0] != -1) and (rightside_point[1][0] != -1) and (rightside_point[2][0] != -1) and (rightside_point[3][0] != -1):
 		sho_R=rightside_point[0]
 		hip_R=rightside_point[1]
