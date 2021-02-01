@@ -126,6 +126,7 @@ class EdgeNode():
         self.ansGT=[]
         self.hipGT=[]
         self.TryList=[]
+        self.Frame_list = []
         self.HIP_TryList=[]
         self.errorlist=[]
         self.LastHipInfrence=0
@@ -492,27 +493,28 @@ class EdgeNode():
 
         return image
 
-    def drawPoseCOCO18(self, image, objhist, rank,actionbool,frame,numofOBJ):
+    def drawPoseCOCO18(self, image, objhist, rank, actionbool, frame, numofOBJ):
     
     
-        ansfile="/home/justin/Documents/mobility/other/ans.csv"
-        HIPansfile="/home/justin/Documents/mobility/other/hip-ans.csv"
-        hipGTFile="/home/justin/Documents/mobility/other/AVG-HIP-1.csv"
+        Kneeansfile="/mnt/AI_RAID/Mobility-assessment/left_results_gait/Knee_revamp_nokalman.csv"
+        HIPansfile="/mnt/AI_RAID/Mobility-assessment/left_results_gait/hip_revamp_nokalman.csv"
+        hipGTFile="/mnt/AI_RAID/Mobility-assessment/first_example_gait/Hip_gait_gt.csv"
+        self.Frame_list.append(frame)
         if self.fileGTBool==0:
             
-            GTfile="/home/justin/Documents/mobility/other/AVGknee1.csv"
-            errorfile="/home/justin/Documents/mobility/other/error.csv"
+            GTfile="/mnt/AI_RAID/Mobility-assessment/first_example_gait/Knee_gait_gt.csv"
+            errorfile="/mnt/AI_RAID/Mobility-assessment/first_example_gait/Failed_files/MA_issues.csv"
             with open(GTfile, 'r') as read_obj:
                 csv_reader = reader(read_obj)
                 for row in csv_reader:
                     self.ansGT.append(float(row[0]))
                     
                     
-            with open(hipGTFile, 'r') as read_obj:
+            '''with open(hipGTFile, 'r') as read_obj:
                 csv_reader = reader(read_obj)
                 for row in csv_reader:
                     self.hipGT.append(float(row[0]))
-            self.fileGTBool=1
+            self.fileGTBool=1'''
 
         kp_pairs = [[14,16],
                     [13,15],
@@ -532,11 +534,10 @@ class EdgeNode():
                     [6,12],
                     [5,6],
                     [11,12]]
-                    
-#11->13->15
-#12->14->16
-                    
-
+# 11->13->15 --> left side knee angles
+# 12->14->16 --> right side knee angles
+# 5->11->13 --> left hip angles
+# 6->12->14 --> right hip angles
         keypoints = objhist.keypoints
         personID = objhist.sendObject
 
@@ -563,22 +564,23 @@ class EdgeNode():
             #print(self.classlabel[str(rank)])
 
         for pair in kp_pairs:
-        #print(keypoints.shape)
+        
             kp0 = keypoints[pair[0],:]
             kp0Name=pair[0]
             kp1 = keypoints[pair[1],:]
             kp1Name=pair[1]
 
+            # Visualisation of the keypoints
             if (kp0[0] != -1) and (kp1[0] != -1):
-                image = cv2.line(image, (int(kp0[0]), int(kp0[1])), (int(kp1[0]), int(kp1[1])), color, 6)
+                # Take only hip and knee joints for mobility assesment
+                if (kp0Name in [11,13,15,12,14,16,5,11,13,6,12,14]) and (kp1Name in [11,13,15,12,14,16,5,11,13,6,12,14]):
+                    image = cv2.line(image, (int(kp0[0]), int(kp0[1])), (int(kp1[0]), int(kp1[1])), color, 6)
             if (kp0[0] != -1):
                 image = cv2.circle(image, (int(kp0[0]), int(kp0[1])), 3, color)
-                
-                #image = cv2.putText(image, str(kp0Name), (int(kp0[0]), int(kp0[1])), font, scale*1.2, color, thickness)
-                
+                image = cv2.putText(image, str(kp0Name), (int(kp0[0]) + 3, int(kp0[1]) +3 ), font, scale*1.2, color, thickness)
             if (kp1[0] != -1):
                 image = cv2.circle(image, (int(kp1[0]), int(kp1[1])), 3, color)
-                #image = cv2.putText(image, str(kp1Name), (int(kp1[0]), int(kp1[1])), font, scale*1.2, color, thickness)
+                image = cv2.putText(image, str(kp1Name), (int(kp1[0]) + 3, int(kp1[1]) + 3), font, scale*1.2, color, thickness)
             #if (kp0Name == 11) and (kp1Name == 13) and (kp0[0] != -1) and (kp1[0] != -1):
             #   point1=(int(kp0[0]), int(kp0[1]))
             #   point2=(int(kp1[0]), int(kp1[1]))
@@ -588,9 +590,12 @@ class EdgeNode():
         sho_L = keypoints[5,:]
         sho_R = keypoints[6,:]
         
+        # Knee angle keypoints - left
         kp0L = keypoints[11,:]
         kp1L = keypoints[13,:]
         kp2L = keypoints[15,:]
+
+        # Knee angle keypoints - left
         kp0R = keypoints[12,:]
         kp1R = keypoints[14,:]
         kp2R = keypoints[16,:]
@@ -598,29 +603,36 @@ class EdgeNode():
         #self.errorlist=[]
         answer=0
 
-        if (kp0L[0] != -1) and (kp1L[0] != -1) and (kp2L[0] != -1) and (numofOBJ ==0):
+        # Left knee Angle calculation
+        if (kp0L[0] != -1) and (kp1L[0] != -1) and (kp2L[0] != -1) and (numofOBJ == 0):
             A= math.sqrt( ((kp0L[0]-kp1L[0])**2)+ ((kp0L[1]-kp1L[1])**2) )
             B= math.sqrt( ((kp1L[0]-kp2L[0])**2)+ ((kp1L[1]-kp2L[1])**2) )
             C= math.sqrt( ((kp0L[0]-kp2L[0])**2)+ ((kp0L[1]-kp2L[1])**2) )
-            answer=180-math.degrees(math.acos( ( (C**2)-(A**2)-(B**2) )/(-2*A*B) ) )
+            answer = 180-math.degrees(math.acos( ( (C**2)-(A**2)-(B**2) )/(-2*A*B) ) )
             self.TryList.append(answer)
 
-            #print("the answer is :",answer,"\n")
-        elif (kp0R[0] != -1) and (kp1R[0] != -1) and (kp2R[0] != -1) and (numofOBJ ==0):
+        elif (numofOBJ == 0):
+            answer=-1
+            self.TryList.append(answer)
+        
+
+        '''# Right Knee angle calculation
+        elif (kp0R[0] != -1) and (kp1R[0] != -1) and (kp2R[0] != -1) and (numofOBJ == 0):
             A= math.sqrt( ((kp0R[0]-kp1R[0])**2)+ ((kp0R[1]-kp1R[1])**2) )
             B= math.sqrt( ((kp1R[0]-kp2R[0])**2)+ ((kp1R[1]-kp2R[1])**2) )
             C= math.sqrt( ((kp0R[0]-kp2R[0])**2)+ ((kp0R[1]-kp2R[1])**2) )
             answer=180-math.degrees(math.acos( ( (C**2)-(A**2)-(B**2) )/(-2*A*B) ) )
-
             self.TryList.append(answer)
-            
-        elif  (numofOBJ ==0):
-            #print("the answer is error")
-            answer=-1
-            self.TryList.append(answer)
+        '''    
+        
+        
         if (answer!= -1) and (numofOBJ ==0):
-           error= (abs(self.ansGT[int(frame-1)]-answer)/self.ansGT[int(frame-1)])*100
+
+            # frames are 0 indexed if frames start from 1 then change frame -1 below
+            ### Check error calculation with justin
+           error= (abs(self.ansGT[int(frame)]-answer)/self.ansGT[int(frame)])*100
            ep = (1270, 370)
+           
            self.errorlist.append(error)
            report=str(answer)
            report= report[0:6]
@@ -629,19 +641,19 @@ class EdgeNode():
            image = cv2.putText(image, errorPres,ep, font, scale*1.2, (255, 0, 0), thickness)
           
            ep = (1270, 410)
-           KneeGt=str(self.ansGT[int(frame-1)])
-           KneeGt=KneeGt[0:6]
-           Fronttext="Knee bend GT : "
-           GTPres= Fronttext +KneeGt +" degs"
+           # frames are 0 indexed if frames start from 1 then change frame -1 below
+           KneeGt = str(self.ansGT[int(frame)])
+           KneeGt = KneeGt[0:6]
+           Fronttext = "Knee bend GT : "
+           GTPres = Fronttext + KneeGt +" degs"
            image = cv2.putText(image, GTPres,ep, font, scale*1.2, (0, 0, 255), thickness)
            
-
-           if int(frame)==175:
+           if int(frame)==93:
               print(self.errorlist)
               print(self.TryList)
               
 
-        if (kp0L[0] != -1) and (kp1L[0] != -1) and (sho_L[0] != -1) and (numofOBJ ==0):
+        '''if (kp0L[0] != -1) and (kp1L[0] != -1) and (sho_L[0] != -1) and (numofOBJ ==0):
 
             A= math.sqrt( ((sho_L[0]-kp0L[0])**2)+ ((sho_L[1]-kp0L[1])**2) )
             B= math.sqrt( ((kp0L[0]-kp1L[0])**2)+ ((kp0L[1]-kp1L[1])**2) )
@@ -651,12 +663,7 @@ class EdgeNode():
                 self.LastHipInfrence=HIPanswer
             except:
                 HIPanswer =float(self.kfilter( self.LastHipInfrence)[0])
-                
-
-
-
-                
-                
+ 
                             
             self.HIP_TryList.append(HIPanswer)
             #print("the answer is :",answer,"\n")
@@ -677,8 +684,8 @@ class EdgeNode():
             #print("the answer is error")
             HIPanswer =float(self.kfilter( self.LastHipInfrence)[0])
             self.HIP_TryList.append(HIPanswer)
+        
         if (answer!= self.LastHipInfrence) and (numofOBJ ==0):
-           
            #hip           
            error= (abs(self.hipGT[int(frame-1)]-HIPanswer)/self.hipGT[int(frame-1)])*100
            ep = (1270, 290)
@@ -694,26 +701,17 @@ class EdgeNode():
            HIPGtString=HIPGtString[0:6]
            Fronttext="Hip bend GT : "
            GTPres= Fronttext +HIPGtString +" degs"
-           image = cv2.putText(image, GTPres,ep, font, scale*1.2, (0, 0, 255), thickness)
+           image = cv2.putText(image, GTPres,ep, font, scale*1.2, (0, 0, 255), thickness)'''
            
-              
-              
-           with open(ansfile, mode='w') as Pred_angle:
+        with open(Kneeansfile, mode='w') as Pred_angle:
               Pred_angle_writer = csv.writer(Pred_angle, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
               for i in range(len(self.TryList)):
                  Pred_angle_writer.writerow([self.TryList[i]])
 
-           with open(HIPansfile, mode='w') as Pred_angle:
+        '''with open(HIPansfile, mode='w') as Pred_angle:
               Pred_angle_writer = csv.writer(Pred_angle, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
               for i in range(len(self.HIP_TryList)):
-                 Pred_angle_writer.writerow([self.HIP_TryList[i]])
-
-                
-                
-     
-
-#11->13->15
-#12->14->16
+                 Pred_angle_writer.writerow([self.HIP_TryList[i]])'''
         return image
 
     def drawFramePoses(self, frame, image, ObjectHistoryList):
@@ -722,6 +720,7 @@ class EdgeNode():
             os.makedirs(image_path)
         image_path += '/' + "{:06d}".format(int(frame)) + '.jpg'
         numofOBJ=0
+        print(len(ObjectHistoryList))
         for objhist in ObjectHistoryList:
             if (self.opts.eval_set % 2 == 0):
                 keypoints = objhist.keypoints   

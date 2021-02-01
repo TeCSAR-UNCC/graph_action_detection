@@ -1,9 +1,9 @@
 #!/usr/bin/python3
 import sys
 import os
+import numpy as np
 import scipy.io as sci
 import cv2
-import numpy as np
 from tqdm import tqdm
 from PIL import Image
 import subprocess
@@ -38,7 +38,7 @@ from actionGraph import KeyProcessor
 
 use_EfficientHRNet = True
 use_EfficientSegNet = False
-'''
+
 def parse_args():
     parser = argparse.ArgumentParser(description='Inference EfficientHRNet Pose')
     # general
@@ -61,7 +61,7 @@ def parse_args():
     args = parser.parse_args()
 
     return args
-'''
+
 def postSimValidation(validation_table):
     print()
     num_gt_ids = validation_table.shape[0]
@@ -183,7 +183,7 @@ def main():
     else:
         frontend_net = MobileNetKeypoints('./src/MobileNetKeypoints/default_checkpoints/checkpoint_iter_245000.pth', using_gpu)
         
-    id_encoder = FeatureEncoder('./src/ReIDFeatureExtractor/model/mobilenetV2.pt', using_gpu)
+    id_encoder = FeatureEncoder('/mnt/AI_RAID/Mobility-assessment/weights/mobilenetV2.pt', using_gpu)
     
     max_feats_per_id = 10
 
