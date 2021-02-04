@@ -188,7 +188,9 @@ class keypoint_regression():
         return X_train_array, Y_train_array, X_test_array, Y_test_array
         
     def PerformLinearRegression(self, XTrainVariables, YTrainVariables, XTestVariables):
-        
+        """
+        Function to perform linear regression if XVaraibles are highly correlated 
+        """
         # Normalize the variables
         XTrainVariables = XTrainVariables.reshape(-1,1)
         YTrainVariables = YTrainVariables.reshape(-1,1)
@@ -227,23 +229,27 @@ class keypoint_regression():
     
     def PerformRandomForest(self, XTrainVariables, YTrainVariables, XTestVariables):
 
-        # Normalize the variables
-        '''XTrainVariables = XTrainVariables.reshape(-1,1)
-        YTrainVariables = YTrainVariables.reshape(-1,1)
-        Normalized_X, Normalized_Y = self.Normalize(XTrainVariables, YTrainVariables)'''
+        """
+        Function to perform Random Forest Regression
+        """
         
         # Choose X variable depending upon the correlation matrix
         YTrainVariables = YTrainVariables.reshape(-1,1)
         X_train, X_val, y_train, y_val = train_test_split(XTrainVariables, YTrainVariables, test_size=0.2, random_state=SEED)
+        
+        # Hyper parameter tuning for Random Forest regressor gives best hyper parameters
         #params = self.hyper_parameter_tuning(X_train, y_train, XTestVariables)
         #X_train = X_train.reshape(-1,1)
         #X_val = X_val.reshape(-1,1)
 
         # Instantiate a random forests regressor
         rf = RandomForestRegressor(random_state=SEED, n_estimators = 10, min_samples_leaf = 4)
+        
+        # Run this if hyper parameter tuning is done
         '''rf = RandomForestRegressor(bootstrap = params['bootstrap'], random_state=SEED, n_estimators=params['n_estimators'], 
                                 min_samples_leaf = params['min_samples_leaf'] , max_features= params['max_features'],
                                 max_depth= params['max_depth'], min_samples_split=params['min_samples_split'])'''
+        
         # Fit 'rf' to the training set
         rf.fit(X_train, y_train.ravel())
         
@@ -352,6 +358,9 @@ class keypoint_regression():
 
     def UpdateMissing(self, X_test, missing_values, ColumnNameX, ColumnNameY):
         
+        """
+        Update the missing values (-1) with regressed value in the keypoints dict
+        """
         count = 0
         for i,values in enumerate(X_test):
             for index in sorted(self.left_keypoints):
@@ -363,6 +372,8 @@ class keypoint_regression():
 
     def CalculateAngles(self):
         """
+        Calculate the missing angles for Knee bend and Hip bend from the keypoint dict 
+        and update the values in the keypoint dict with key Knee_bend, Hip_bend
         """
         
         # calculates Angles for Knee bend
@@ -386,7 +397,7 @@ class keypoint_regression():
             self.left_keypoints[frame]['Hip_bend'] = 180-math.degrees(math.acos( ( (F**2)-(D**2)-(E**2) )/(-2*D*E) ) )
 
 def get_args_parser():
-    
+    # Arguments PArser function
     parser = argparse.ArgumentParser('csv_keypoint ', add_help=False)
     parser.add_argument('--input', default=" ", type=str)
     parser.add_argument('--output', default=" ", type=str)
