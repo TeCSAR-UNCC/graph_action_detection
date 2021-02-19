@@ -33,7 +33,7 @@ Since the keypoints are missing the resulting angles are -1.0 which makes it dif
   * Take only the columns with missing values and find its highly correlated columns For example : If the keypoints are missing in Foot then Foot x,y coordinates is highly correlated to knee than hip or shoulder.
   * Take the X Variable(Ex : Knee_keypoint x,y) and Y Variable (Ex : Foot_keypoint x,y) and seperate it to train and test dataset. The test dataset has the datapoints with -1.0 values. Then perform train,val split on train dataset.
   * Perform Random regression to get multi-ouput and then perform angle calculation on top of it.
-  * Script can be found [here](https://github.com/malarsaravanan1991/Missing-Keypoint-imputation-withRandom-forest-regression/blob/main/MultiOuput_RandForestReg.py)
+  * Script can be found [here](https://github.com/TeCSAR-UNCC/graph_action_detection/blob/main/multi_output_reg.py)
 
 ## Pre-Requisite
 ```
