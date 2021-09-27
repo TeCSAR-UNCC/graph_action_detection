@@ -92,7 +92,7 @@ class ObjectHistory():
         self.seen = 0
         
         
-
+# I need to have a class of action buffers
 class actionbuffer():
     def __init__(self):
         self.KBufferTotal=0
@@ -111,7 +111,7 @@ class EdgeNode():
         self.server_keypoint_threshold = 0.8
         self.server_seen_threshold = 10
         self.table_size = 200
-        
+        #Action Detection        
         self.Keyprocessor= Keyprocessor
         self.actionbuffer=actionbuffer()
         self.IDDict=dict()
@@ -121,6 +121,7 @@ class EdgeNode():
         self.classlabel['2']='Jumping'
         self.classlabel['3']='Staggering'
         self.classlabel['4']='Walking'
+        #angle stuff
         self.currFrameNum=0
         self.fileGTBool=0
         self.ansGT=[]
@@ -474,8 +475,8 @@ class EdgeNode():
         scale = 0.7
         thickness = 2
         start_point2 = (bbox[0], bbox[1]-25)
-        if actionbool == 1 :
-            image = cv2.putText(image, self.classlabel[str(rank)], start_point2, font, scale*1.2, color, thickness)
+        #if actionbool == 1 :
+            #image = cv2.putText(image, self.classlabel[str(rank)], start_point2, font, scale*1.2, color, thickness)
             #print(self.classlabel[str(rank)])
         # id_label = str(int(personID.label / 1000000)) + "-{:06d}".format(int(personID.label % 1000000))
         #id_label = "P-" + str(int(personID.label % 1000000))
@@ -495,27 +496,6 @@ class EdgeNode():
 
     def drawPoseCOCO18(self, image, objhist, rank, actionbool, frame, numofOBJ):
     
-    
-        Kneeansfile="/mnt/AI_RAID/Mobility-assessment/left_results_gait/Knee_revamp_nokalman.csv"
-        HIPansfile="/mnt/AI_RAID/Mobility-assessment/left_results_gait/hip_revamp_nokalman.csv"
-        hipGTFile="/mnt/AI_RAID/Mobility-assessment/first_example_gait/Hip_gait_gt.csv"
-        self.Frame_list.append(frame)
-        if self.fileGTBool==0:
-            
-            GTfile="/mnt/AI_RAID/Mobility-assessment/first_example_gait/Knee_gait_gt.csv"
-            errorfile="/mnt/AI_RAID/Mobility-assessment/first_example_gait/Failed_files/MA_issues.csv"
-            with open(GTfile, 'r') as read_obj:
-                csv_reader = reader(read_obj)
-                for row in csv_reader:
-                    self.ansGT.append(float(row[0]))
-                    
-                    
-            '''with open(hipGTFile, 'r') as read_obj:
-                csv_reader = reader(read_obj)
-                for row in csv_reader:
-                    self.hipGT.append(float(row[0]))
-            self.fileGTBool=1'''
-
         kp_pairs = [[14,16],
                     [13,15],
                     [12,14],
@@ -554,13 +534,13 @@ class EdgeNode():
         font = cv2.FONT_HERSHEY_SIMPLEX
         scale = 0.7
         thickness = 2
-        #id_label = str(int(personID.label / 1000000)) + "-{:01d}".format(int(personID.label % 1000000))
-        #id_label = '{:d}'.format(int(personID.label / 1000000))
-        #image = cv2.putText(image, id_label, start_point, font, scale, color, thickness)
+        id_label = str(int(personID.label / 1000000)) + "-{:01d}".format(int(personID.label % 1000000))
+        id_label = '{:d}'.format(int(personID.label / 1000000))
+        image = cv2.putText(image, id_label, start_point, font, scale, color, thickness)
         #action
         start_point2 = (bbox[0], bbox[1]-25)
-        #if actionbool == 1 :
-            #image = cv2.putText(image, self.classlabel[str(rank)], start_point2, font, scale*1.2, color, thickness)
+        if actionbool == 1 :
+            image = cv2.putText(image, self.classlabel[str(rank)], start_point2, font, scale*1.2, color, thickness)
             #print(self.classlabel[str(rank)])
 
         for pair in kp_pairs:
@@ -581,138 +561,84 @@ class EdgeNode():
             if (kp1[0] != -1):
                 image = cv2.circle(image, (int(kp1[0]), int(kp1[1])), 3, color)
                 image = cv2.putText(image, str(kp1Name), (int(kp1[0]) + 3, int(kp1[1]) + 3), font, scale*1.2, color, thickness)
-            #if (kp0Name == 11) and (kp1Name == 13) and (kp0[0] != -1) and (kp1[0] != -1):
-            #   point1=(int(kp0[0]), int(kp0[1]))
-            #   point2=(int(kp1[0]), int(kp1[1]))
-            #elif (kp0Name == 13) and (kp1Name == 15)
-            #   point3=(int(kp1[0]), int(kp1[1]))
-            
-        sho_L = keypoints[5,:]
-        sho_R = keypoints[6,:]
-        
-        # Knee angle keypoints - left
-        kp0L = keypoints[11,:]
-        kp1L = keypoints[13,:]
-        kp2L = keypoints[15,:]
-
-        # Knee angle keypoints - left
-        kp0R = keypoints[12,:]
-        kp1R = keypoints[14,:]
-        kp2R = keypoints[16,:]
-        #self.TryList=[]
-        #self.errorlist=[]
-        answer=0
-
-        # Left knee Angle calculation
-        if (kp0L[0] != -1) and (kp1L[0] != -1) and (kp2L[0] != -1) and (numofOBJ == 0):
-            A= math.sqrt( ((kp0L[0]-kp1L[0])**2)+ ((kp0L[1]-kp1L[1])**2) )
-            B= math.sqrt( ((kp1L[0]-kp2L[0])**2)+ ((kp1L[1]-kp2L[1])**2) )
-            C= math.sqrt( ((kp0L[0]-kp2L[0])**2)+ ((kp0L[1]-kp2L[1])**2) )
-            answer = 180-math.degrees(math.acos( ( (C**2)-(A**2)-(B**2) )/(-2*A*B) ) )
-            self.TryList.append(answer)
-
-        elif (numofOBJ == 0):
-            answer=-1
-            self.TryList.append(answer)
-        
-
-        '''# Right Knee angle calculation
-        elif (kp0R[0] != -1) and (kp1R[0] != -1) and (kp2R[0] != -1) and (numofOBJ == 0):
-            A= math.sqrt( ((kp0R[0]-kp1R[0])**2)+ ((kp0R[1]-kp1R[1])**2) )
-            B= math.sqrt( ((kp1R[0]-kp2R[0])**2)+ ((kp1R[1]-kp2R[1])**2) )
-            C= math.sqrt( ((kp0R[0]-kp2R[0])**2)+ ((kp0R[1]-kp2R[1])**2) )
-            answer=180-math.degrees(math.acos( ( (C**2)-(A**2)-(B**2) )/(-2*A*B) ) )
-            self.TryList.append(answer)
-        '''    
-        
-        
-        if (answer!= -1) and (numofOBJ ==0):
-
-            # frames are 0 indexed if frames start from 1 then change frame -1 below
-            ### Check error calculation with justin
-           error= (abs(self.ansGT[int(frame)]-answer)/self.ansGT[int(frame)])*100
-           ep = (1270, 370)
-           
-           self.errorlist.append(error)
-           report=str(answer)
-           report= report[0:6]
-           Fronttext="Knee bend : "
-           errorPres= Fronttext +report +" degs"
-           image = cv2.putText(image, errorPres,ep, font, scale*1.2, (255, 0, 0), thickness)
-          
-           ep = (1270, 410)
-           # frames are 0 indexed if frames start from 1 then change frame -1 below
-           KneeGt = str(self.ansGT[int(frame)])
-           KneeGt = KneeGt[0:6]
-           Fronttext = "Knee bend GT : "
-           GTPres = Fronttext + KneeGt +" degs"
-           image = cv2.putText(image, GTPres,ep, font, scale*1.2, (0, 0, 255), thickness)
-           
-           if int(frame)==93:
-              print(self.errorlist)
-              print(self.TryList)
-              
-
-        '''if (kp0L[0] != -1) and (kp1L[0] != -1) and (sho_L[0] != -1) and (numofOBJ ==0):
-
-            A= math.sqrt( ((sho_L[0]-kp0L[0])**2)+ ((sho_L[1]-kp0L[1])**2) )
-            B= math.sqrt( ((kp0L[0]-kp1L[0])**2)+ ((kp0L[1]-kp1L[1])**2) )
-            C= math.sqrt( ((sho_L[0]-kp1L[0])**2)+ ((sho_L[1]-kp1L[1])**2) )
-            try:
-                HIPanswer=180-math.degrees(math.acos( ( (C**2)-(A**2)-(B**2) )/(-2*A*B) ) )
-                self.LastHipInfrence=HIPanswer
-            except:
-                HIPanswer =float(self.kfilter( self.LastHipInfrence)[0])
- 
-                            
-            self.HIP_TryList.append(HIPanswer)
-            #print("the answer is :",answer,"\n")
-        elif (kp0R[0] != -1) and (kp1R[0] != -1) and (sho_R[0] != -1) and (numofOBJ ==0):
-            
-            #hip
-            A= math.sqrt( ((sho_R[0]-kp0R[0])**2)+ ((sho_R[1]-kp0R[1])**2) )
-            B= math.sqrt( ((kp0R[0]-kp1R[0])**2)+ ((kp0L[1]-kp1R[1])**2) )
-            C= math.sqrt( ((sho_R[0]-kp1R[0])**2)+ ((sho_R[1]-kp1R[1])**2) )
-            try:
-                HIPanswer=180-math.degrees(math.acos( ( (C**2)-(A**2)-(B**2) )/(-2*A*B) ) )
-                self.LastHipInfrence=HIPanswer
-            except:
-               HIPanswer =float(self.kfilter( self.LastHipInfrence)[0])
-            self.HIP_TryList.append(HIPanswer)
-            #print("the answer is :",answer,"\n")
-        elif  (numofOBJ ==0):
-            #print("the answer is error")
-            HIPanswer =float(self.kfilter( self.LastHipInfrence)[0])
-            self.HIP_TryList.append(HIPanswer)
-        
-        if (answer!= self.LastHipInfrence) and (numofOBJ ==0):
-           #hip           
-           error= (abs(self.hipGT[int(frame-1)]-HIPanswer)/self.hipGT[int(frame-1)])*100
-           ep = (1270, 290)
-           report=str(HIPanswer)
-           report= report[0:4]
-           Fronttext="Hip bend : "
-           errorPres= Fronttext +report +" degs"
-           image = cv2.putText(image, errorPres,ep, font, scale*1.2, (255, 0, 0), thickness)
-           
-           
-           ep = (1270, 330)
-           HIPGtString=str(self.hipGT[int(frame-1)])
-           HIPGtString=HIPGtString[0:6]
-           Fronttext="Hip bend GT : "
-           GTPres= Fronttext +HIPGtString +" degs"
-           image = cv2.putText(image, GTPres,ep, font, scale*1.2, (0, 0, 255), thickness)'''
-           
-        with open(Kneeansfile, mode='w') as Pred_angle:
-              Pred_angle_writer = csv.writer(Pred_angle, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-              for i in range(len(self.TryList)):
-                 Pred_angle_writer.writerow([self.TryList[i]])
-
-        '''with open(HIPansfile, mode='w') as Pred_angle:
-              Pred_angle_writer = csv.writer(Pred_angle, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-              for i in range(len(self.HIP_TryList)):
-                 Pred_angle_writer.writerow([self.HIP_TryList[i]])'''
         return image
+        
+    def actionClassification(self, IDkey):
+        if len(self.IDDict) == 0  or IDkey not in self.IDDict:
+           self.IDDict[IDkey]=actionbuffer()
+           #print('\nnew buffer!\n')
+        #problem this shares memory
+        badKPtensor = torch.from_numpy(keypoints[:,:].copy())#Keypoint tensor
+        #print(type(KPtensor))
+        KPtensor=torch.rand(18,2)
+        old_kp =[0,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17]
+        NEW_kp =[0,5,7,9,6,8,10,11,13,15,12,14,16,1,2,3,4]
+        for i in range(len(NEW_kp)):
+     	    for c in range(2): #channels
+      	        x=NEW_kp[i]
+      	        y=old_kp[i]
+      	        KPtensor[y,c]=badKPtensor[x,c]
+        KPtensor[1,0]=(KPtensor[5,0]+KPtensor[6,0]/2)
+        KPtensor[1,1]=(KPtensor[5,1]+KPtensor[6,1]/2)
+
+        #to do set keypoint 1 = to new keypoint 5 and 6 averaged
+        #im going from their new to my old
+       # print(KPtensor.size())
+        xCenter=((KPtensor[0,0]+ KPtensor[8,0]+KPtensor[11,0])/3)
+        yCenter=((KPtensor[0,1]+ KPtensor[8,1]+KPtensor[11,1])/3)
+        for i in range(17):
+            KPtensor[i,0]=KPtensor[i,0]-xCenter
+            KPtensor[i,1]=KPtensor[i,1]-yCenter
+        #print(KPtensor)
+        #Input shape should be (N, C, T, V, M)
+        #print('\nexecute\n')
+        KPtensor = KPtensor.permute(1,0)
+        KPtensor.unsqueeze_(-1)
+        KPtensor.unsqueeze_(-1)
+        KPtensor.unsqueeze_(-1)
+        #original shape=[channels, joints, time, samples, people])
+        KPtensor = KPtensor.permute(3,0,2,1,4)
+        #new shape: [samples,channels,time,joints,people]
+        #print(KPtensor.size())#=print(KPtensor.shape)
+        #print(KPtensor)
+
+        #print('We are at frame :',self.KBufferTotal)
+
+        if self.IDDict[IDkey].KBufferTotal == 29:
+           self.IDDict[IDkey].SpaceTimeGraph=torch.roll(self.IDDict[IDkey].SpaceTimeGraph, -1, 0)
+           temp=self.IDDict[IDkey].SpaceTimeGraph[:,:,:self.IDDict[IDkey].KBufferTotal-1,:,:]
+           #        self.SpaceTimeGraph=torch.rand(1,2,150,18,1)
+           #print('temp shape :',temp.shape)
+           #print('KPtensor shape :',KPtensor.shape)
+           self.IDDict[IDkey].SpaceTimeGraph=torch.cat([temp,KPtensor.float()], 2)
+           output=self.Keyprocessor.start(self.IDDict[IDkey].SpaceTimeGraph.cuda())
+           rank = output.argsort()
+          # print(rank)
+           self.IDDict[IDkey].actionBool=1
+           self.IDDict[IDkey].rank=rank[0][4]#argsort goes through the reverse order, so the last is biggest
+          # print(rank,'rank \n')
+          # print(rank[0])
+           #print(output)
+           #new shape: [no,no,yes,no,no]
+
+           #print(self.SpaceTimeGraph)
+        else:
+           self.IDDict[IDkey].KBufferTotal=self.IDDict[IDkey].KBufferTotal+1
+           temp=self.IDDict[IDkey].SpaceTimeGraph[:,:,:(self.IDDict[IDkey].KBufferTotal-1),:,:]
+           #print('KBuffershape :',self.IDDict[IDkey].SpaceTimeGraph.shape)
+           #print('temp shape :',temp.shape)
+           #print('KPtensor shape :',KPtensor.shape)
+           #        self.SpaceTimeGraph=torch.rand(1,2,150,18,1)
+           self.IDDict[IDkey].SpaceTimeGraph=torch.cat([temp,KPtensor.float()],2)
+           #print(self.SpaceTimeGraph)
+        
+        #exit()
+        #self.Keyprocessor.start(keypoints[0,:,:])
+        #print("\n\nkeypoints shape: ",keypoints.shape)
+        #print(keypoints)
+        #print("\n\n")
+        #exit()
+        #(detecctions,keypoints,x+y
 
     def drawFramePoses(self, frame, image, ObjectHistoryList):
         image_path = self.opts.image_output_path + '/camera' + str(self.id)
@@ -726,81 +652,7 @@ class EdgeNode():
                 keypoints = objhist.keypoints   
                 personID = objhist.sendObject
                 IDkey=personID.label
-                if len(self.IDDict) == 0  or IDkey not in self.IDDict:
-                   self.IDDict[IDkey]=actionbuffer()
-                   #print('\nnew buffer!\n')
-                #problem this shares memory
-                badKPtensor = torch.from_numpy(keypoints[:,:].copy())#Keypoint tensor
-                #print(type(KPtensor))
-                KPtensor=torch.rand(18,2)
-                old_kp =[0,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17]
-                NEW_kp =[0,5,7,9,6,8,10,11,13,15,12,14,16,1,2,3,4]
-                for i in range(len(NEW_kp)):
-             	    for c in range(2): #channels
-              	        x=NEW_kp[i]
-              	        y=old_kp[i]
-              	        KPtensor[y,c]=badKPtensor[x,c]
-                KPtensor[1,0]=(KPtensor[5,0]+KPtensor[6,0]/2)
-                KPtensor[1,1]=(KPtensor[5,1]+KPtensor[6,1]/2)
-	    
-                #to do set keypoint 1 = to new keypoint 5 and 6 averaged
-                #im going from their new to my old
-               # print(KPtensor.size())
-                xCenter=((KPtensor[0,0]+ KPtensor[8,0]+KPtensor[11,0])/3)
-                yCenter=((KPtensor[0,1]+ KPtensor[8,1]+KPtensor[11,1])/3)
-                for i in range(17):
-                    KPtensor[i,0]=KPtensor[i,0]-xCenter
-                    KPtensor[i,1]=KPtensor[i,1]-yCenter
-                #print(KPtensor)
-                #Input shape should be (N, C, T, V, M)
-                #print('\nexecute\n')
-                KPtensor = KPtensor.permute(1,0)
-                KPtensor.unsqueeze_(-1)
-                KPtensor.unsqueeze_(-1)
-                KPtensor.unsqueeze_(-1)
-                #original shape=[channels, joints, time, samples, people])
-                KPtensor = KPtensor.permute(3,0,2,1,4)
-                #new shape: [samples,channels,time,joints,people]
-                #print(KPtensor.size())#=print(KPtensor.shape)
-                #print(KPtensor)
-
-                #print('We are at frame :',self.KBufferTotal)
-
-                if self.IDDict[IDkey].KBufferTotal == 29:
-                   self.IDDict[IDkey].SpaceTimeGraph=torch.roll(self.IDDict[IDkey].SpaceTimeGraph, -1, 0)
-                   temp=self.IDDict[IDkey].SpaceTimeGraph[:,:,:self.IDDict[IDkey].KBufferTotal-1,:,:]
-                   #        self.SpaceTimeGraph=torch.rand(1,2,150,18,1)
-                   #print('temp shape :',temp.shape)
-                   #print('KPtensor shape :',KPtensor.shape)
-                   self.IDDict[IDkey].SpaceTimeGraph=torch.cat([temp,KPtensor.float()], 2)
-                   output=self.Keyprocessor.start(self.IDDict[IDkey].SpaceTimeGraph.cuda())
-                   rank = output.argsort()
-                  # print(rank)
-                   self.IDDict[IDkey].actionBool=1
-                   self.IDDict[IDkey].rank=rank[0][4]#argsort goes through the reverse order, so the last is biggest
-                  # print(rank,'rank \n')
-                  # print(rank[0])
-                   #print(output)
-                   #new shape: [no,no,yes,no,no]
-
-                   #print(self.SpaceTimeGraph)
-                else:
-                   self.IDDict[IDkey].KBufferTotal=self.IDDict[IDkey].KBufferTotal+1
-                   temp=self.IDDict[IDkey].SpaceTimeGraph[:,:,:(self.IDDict[IDkey].KBufferTotal-1),:,:]
-                   #print('KBuffershape :',self.IDDict[IDkey].SpaceTimeGraph.shape)
-                   #print('temp shape :',temp.shape)
-                   #print('KPtensor shape :',KPtensor.shape)
-                   #        self.SpaceTimeGraph=torch.rand(1,2,150,18,1)
-                   self.IDDict[IDkey].SpaceTimeGraph=torch.cat([temp,KPtensor.float()],2)
-                   #print(self.SpaceTimeGraph)
-                
-                #exit()
-                #self.Keyprocessor.start(keypoints[0,:,:])
-                #print("\n\nkeypoints shape: ",keypoints.shape)
-                #print(keypoints)
-                #print("\n\n")
-                #exit()
-                #(detecctions,keypoints,x+y
+                actionClassification(IDkey)
                 image = self.drawPoseCOCO18(image, objhist,self.IDDict[IDkey].rank,self.IDDict[IDkey].actionBool,frame,numofOBJ)
                 numofOBJ=numofOBJ+1
 
